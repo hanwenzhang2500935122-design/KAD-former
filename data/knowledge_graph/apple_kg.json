@@ -1,0 +1,263 @@
+{
+  "meta": {
+    "domain": "Apple Disease Knowledge Graph",
+    "created_by": "AI-assisted generation based on plant pathology references",
+    "status": "DRAFT - requires expert review",
+    "note": "PlantVillage Apple subset: 4 classes (Scab, Black Rot, Rust, Healthy)",
+    "version": "1.0",
+    "total_entities": 33,
+    "total_relations": 6,
+    "total_triples": 106
+  },
+
+  "entities": {
+    "fruit_tree": [
+      { "id": "apple", "label": "苹果", "label_en": "Apple", "class": "fruit_tree" }
+    ],
+    "disease": [
+      { "id": "apple_scab",       "label": "黑星病",   "label_en": "Apple Scab",            "class": "disease" },
+      { "id": "black_rot",        "label": "黑腐病",   "label_en": "Black Rot",              "class": "disease" },
+      { "id": "cedar_rust",       "label": "锈病",     "label_en": "Cedar Apple Rust",       "class": "disease" },
+      { "id": "healthy",          "label": "健康",     "label_en": "Healthy",                 "class": "disease" }
+    ],
+    "pathogen": [
+      { "id": "venturia_inaequalis",  "label": "苹果黑星菌",     "label_en": "Venturia inaequalis" },
+      { "id": "botryosphaeria",       "label": "葡萄座腔菌",     "label_en": "Botryosphaeria obtusa" },
+      { "id": "gymnosporangium",      "label": "东方胶锈菌",     "label_en": "Gymnosporangium juniperi-virginianae" }
+    ],
+    "symptom": [
+      { "id": "scab_olive_velvet",      "label": "橄榄色绒毛斑",     "desc_short": "橄榄色绒毛状斑点" },
+      { "id": "scab_dark_lesion",       "label": "深色凹陷病斑",     "desc_short": "黑褐色凹陷坏死斑" },
+      { "id": "scab_yellow_halo",       "label": "黄色晕圈",         "desc_short": "病斑周围不清晰的黄色晕圈" },
+      { "id": "scab_leaf_curl",         "label": "叶片卷曲",         "desc_short": "病叶边缘向上卷曲畸形" },
+      { "id": "scab_early_defoliation", "label": "早期落叶",         "desc_short": "严重时病叶提前脱落" },
+      { "id": "br_frog_eye",            "label": "蛙眼状轮纹斑",     "desc_short": "紫褐色边缘内有同心轮纹的圆斑" },
+      { "id": "br_purple_specks",       "label": "紫色小点",         "desc_short": "叶片表面密集紫褐色微小斑点" },
+      { "id": "br_fruit_mummified",     "label": "果实干腐僵化",     "desc_short": "果实腐烂干缩变为黑色僵果" },
+      { "id": "br_pycnidia",            "label": "黑色分生孢子器",   "desc_short": "病斑表面隆起的小黑点状结构" },
+      { "id": "br_canker_branch",       "label": "枝条溃疡斑",       "desc_short": "枝条皮层坏死凹陷的溃疡状病斑" },
+      { "id": "rust_orange_pustule",    "label": "橙黄色锈子器",    "desc_short": "叶背密布鲜橙黄色凸起孢子堆" },
+      { "id": "rust_yellow_spot",       "label": "黄绿色小斑点",    "desc_short": "叶片正面初期黄绿色针尖状斑点" },
+      { "id": "rust_red_border",        "label": "红色星状外缘",    "desc_short": "斑点周围出现不规则红色放射状条纹" },
+      { "id": "rust_leaf_thickening",   "label": "病部组织增厚",    "desc_short": "受侵部位叶肉组织异常增厚肿胀" },
+      { "id": "rust_twig_gall",         "label": "枝条菌瘿",        "desc_short": "枝条上形成不规则瘤状增生" },
+      { "id": "healthy_green",          "label": "均匀绿色叶片",    "desc_short": "叶片颜色均匀鲜绿富有光泽" },
+      { "id": "healthy_smooth",         "label": "叶片表面平滑",    "desc_short": "叶片表面平滑无异常凸起或凹陷" },
+      { "id": "healthy_intact",         "label": "叶缘完整",        "desc_short": "叶缘形态完整无卷曲或缺失" }
+    ],
+    "symptom_attribute": [
+      { "id": "color_olive_brown",       "label": "橄榄褐色",       "class": "color" },
+      { "id": "color_dark_brown",        "label": "深褐色",         "class": "color" },
+      { "id": "color_purple_brown",      "label": "紫褐色",         "class": "color" },
+      { "id": "color_orange_yellow",     "label": "橙黄色",         "class": "color" },
+      { "id": "color_yellow_green",      "label": "黄绿色",         "class": "color" },
+      { "id": "color_black",             "label": "黑色",           "class": "color" },
+      { "id": "texture_velvet",          "label": "绒毛状",         "class": "texture" },
+      { "id": "texture_mummified",       "label": "干腐僵化",       "class": "texture" },
+      { "id": "texture_pustular",        "label": "凸起孢子堆",     "class": "texture" },
+      { "id": "shape_ring_concentric",   "label": "同心轮纹状",     "class": "shape" },
+      { "id": "shape_irregular_radial",  "label": "放射状星形",     "class": "shape" },
+      { "id": "shape_depressed",         "label": "凹陷状",         "class": "shape" }
+    ],
+    "plant_part": [
+      { "id": "leaf_upper",    "label": "叶片正面",  "label_en": "Upper Leaf Surface" },
+      { "id": "leaf_lower",    "label": "叶片背面",  "label_en": "Lower Leaf Surface" },
+      { "id": "leaf_margin",   "label": "叶缘",      "label_en": "Leaf Margin" },
+      { "id": "fruit_surface", "label": "果实表面",  "label_en": "Fruit Surface" },
+      { "id": "fruit_flesh",   "label": "果肉内部",  "label_en": "Fruit Flesh" },
+      { "id": "branch",        "label": "枝条树皮",  "label_en": "Branch Bark" },
+      { "id": "twig",          "label": "嫩枝",      "label_en": "Young Twig" },
+      { "id": "flower",        "label": "花器",      "label_en": "Flower" }
+    ],
+    "stage": [
+      { "id": "stage_early",   "label": "发病初期", "label_en": "Early Stage" },
+      { "id": "stage_mid",     "label": "发病中期", "label_en": "Middle Stage" },
+      { "id": "stage_late",    "label": "发病晚期", "label_en": "Late Stage" }
+    ]
+  },
+
+  "relations": [
+    { "id": "species_disease",    "label": "树种→病害",     "head_type": "fruit_tree", "tail_type": "disease" },
+    { "id": "disease_cause",      "label": "病害→病原菌",   "head_type": "disease",    "tail_type": "pathogen" },
+    { "id": "disease_symptom",    "label": "病害→症状",     "head_type": "disease",    "tail_type": "symptom" },
+    { "id": "symptom_location",   "label": "症状→部位",     "head_type": "symptom",    "tail_type": "plant_part" },
+    { "id": "symptom_stage",      "label": "症状→阶段",     "head_type": "symptom",    "tail_type": "stage" },
+    { "id": "symptom_has_color",  "label": "症状→颜色属性", "head_type": "symptom",    "tail_type": "symptom_attribute" },
+    { "id": "symptom_has_texture","label": "症状→质地属性", "head_type": "symptom",    "tail_type": "symptom_attribute" },
+    { "id": "symptom_has_shape",  "label": "症状→形状特征", "head_type": "symptom",    "tail_type": "symptom_attribute" }
+  ],
+
+  "triples": [
+    { "head": "apple",           "relation": "species_disease",    "tail": "apple_scab" },
+    { "head": "apple",           "relation": "species_disease",    "tail": "black_rot" },
+    { "head": "apple",           "relation": "species_disease",    "tail": "cedar_rust" },
+    { "head": "apple",           "relation": "species_disease",    "tail": "healthy" },
+
+    { "head": "apple_scab",      "relation": "disease_cause",      "tail": "venturia_inaequalis" },
+    { "head": "black_rot",       "relation": "disease_cause",      "tail": "botryosphaeria" },
+    { "head": "cedar_rust",      "relation": "disease_cause",      "tail": "gymnosporangium" },
+
+    { "head": "apple_scab",      "relation": "disease_symptom",    "tail": "scab_olive_velvet" },
+    { "head": "apple_scab",      "relation": "disease_symptom",    "tail": "scab_dark_lesion" },
+    { "head": "apple_scab",      "relation": "disease_symptom",    "tail": "scab_yellow_halo" },
+    { "head": "apple_scab",      "relation": "disease_symptom",    "tail": "scab_leaf_curl" },
+    { "head": "apple_scab",      "relation": "disease_symptom",    "tail": "scab_early_defoliation" },
+
+    { "head": "black_rot",       "relation": "disease_symptom",    "tail": "br_frog_eye" },
+    { "head": "black_rot",       "relation": "disease_symptom",    "tail": "br_purple_specks" },
+    { "head": "black_rot",       "relation": "disease_symptom",    "tail": "br_fruit_mummified" },
+    { "head": "black_rot",       "relation": "disease_symptom",    "tail": "br_pycnidia" },
+    { "head": "black_rot",       "relation": "disease_symptom",    "tail": "br_canker_branch" },
+
+    { "head": "cedar_rust",      "relation": "disease_symptom",    "tail": "rust_orange_pustule" },
+    { "head": "cedar_rust",      "relation": "disease_symptom",    "tail": "rust_yellow_spot" },
+    { "head": "cedar_rust",      "relation": "disease_symptom",    "tail": "rust_red_border" },
+    { "head": "cedar_rust",      "relation": "disease_symptom",    "tail": "rust_leaf_thickening" },
+    { "head": "cedar_rust",      "relation": "disease_symptom",    "tail": "rust_twig_gall" },
+
+    { "head": "healthy",         "relation": "disease_symptom",    "tail": "healthy_green" },
+    { "head": "healthy",         "relation": "disease_symptom",    "tail": "healthy_smooth" },
+    { "head": "healthy",         "relation": "disease_symptom",    "tail": "healthy_intact" },
+
+    { "head": "scab_olive_velvet",     "relation": "symptom_has_color",   "tail": "color_olive_brown" },
+    { "head": "scab_olive_velvet",     "relation": "symptom_has_texture", "tail": "texture_velvet" },
+    { "head": "scab_dark_lesion",      "relation": "symptom_has_color",   "tail": "color_dark_brown" },
+    { "head": "scab_dark_lesion",      "relation": "symptom_has_shape",   "tail": "shape_depressed" },
+    { "head": "scab_yellow_halo",      "relation": "symptom_has_color",   "tail": "color_yellow_green" },
+
+    { "head": "br_frog_eye",           "relation": "symptom_has_color",   "tail": "color_purple_brown" },
+    { "head": "br_frog_eye",           "relation": "symptom_has_shape",   "tail": "shape_ring_concentric" },
+    { "head": "br_fruit_mummified",    "relation": "symptom_has_texture", "tail": "texture_mummified" },
+    { "head": "br_fruit_mummified",    "relation": "symptom_has_color",   "tail": "color_black" },
+    { "head": "br_purple_specks",      "relation": "symptom_has_color",   "tail": "color_purple_brown" },
+
+    { "head": "rust_orange_pustule",   "relation": "symptom_has_color",   "tail": "color_orange_yellow" },
+    { "head": "rust_orange_pustule",   "relation": "symptom_has_texture", "tail": "texture_pustular" },
+    { "head": "rust_yellow_spot",      "relation": "symptom_has_color",   "tail": "color_yellow_green" },
+    { "head": "rust_red_border",       "relation": "symptom_has_shape",   "tail": "shape_irregular_radial" },
+
+    { "head": "scab_olive_velvet",     "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "scab_olive_velvet",     "relation": "symptom_location",    "tail": "fruit_surface" },
+    { "head": "scab_olive_velvet",     "relation": "symptom_stage",       "tail": "stage_early" },
+    { "head": "scab_dark_lesion",      "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "scab_dark_lesion",      "relation": "symptom_location",    "tail": "fruit_surface" },
+    { "head": "scab_dark_lesion",      "relation": "symptom_stage",       "tail": "stage_mid" },
+    { "head": "scab_yellow_halo",      "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "scab_yellow_halo",      "relation": "symptom_stage",       "tail": "stage_early" },
+    { "head": "scab_leaf_curl",        "relation": "symptom_location",    "tail": "leaf_margin" },
+    { "head": "scab_leaf_curl",        "relation": "symptom_stage",       "tail": "stage_mid" },
+    { "head": "scab_early_defoliation","relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "scab_early_defoliation","relation": "symptom_stage",       "tail": "stage_late" },
+
+    { "head": "br_purple_specks",      "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "br_purple_specks",      "relation": "symptom_stage",       "tail": "stage_early" },
+    { "head": "br_frog_eye",           "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "br_frog_eye",           "relation": "symptom_stage",       "tail": "stage_mid" },
+    { "head": "br_pycnidia",           "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "br_pycnidia",           "relation": "symptom_location",    "tail": "fruit_surface" },
+    { "head": "br_pycnidia",           "relation": "symptom_stage",       "tail": "stage_late" },
+    { "head": "br_fruit_mummified",    "relation": "symptom_location",    "tail": "fruit_flesh" },
+    { "head": "br_fruit_mummified",    "relation": "symptom_location",    "tail": "fruit_surface" },
+    { "head": "br_fruit_mummified",    "relation": "symptom_stage",       "tail": "stage_late" },
+    { "head": "br_canker_branch",      "relation": "symptom_location",    "tail": "branch" },
+    { "head": "br_canker_branch",      "relation": "symptom_stage",       "tail": "stage_mid" },
+
+    { "head": "rust_yellow_spot",      "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "rust_yellow_spot",      "relation": "symptom_stage",       "tail": "stage_early" },
+    { "head": "rust_red_border",       "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "rust_red_border",       "relation": "symptom_stage",       "tail": "stage_mid" },
+    { "head": "rust_orange_pustule",   "relation": "symptom_location",    "tail": "leaf_lower" },
+    { "head": "rust_orange_pustule",   "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "rust_orange_pustule",   "relation": "symptom_stage",       "tail": "stage_mid" },
+    { "head": "rust_leaf_thickening",  "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "rust_leaf_thickening",  "relation": "symptom_location",    "tail": "leaf_lower" },
+    { "head": "rust_leaf_thickening",  "relation": "symptom_stage",       "tail": "stage_late" },
+    { "head": "rust_twig_gall",        "relation": "symptom_location",    "tail": "twig" },
+    { "head": "rust_twig_gall",        "relation": "symptom_stage",       "tail": "stage_late" },
+
+    { "head": "healthy_green",         "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "healthy_smooth",        "relation": "symptom_location",    "tail": "leaf_upper" },
+    { "head": "healthy_smooth",        "relation": "symptom_location",    "tail": "leaf_lower" },
+    { "head": "healthy_intact",        "relation": "symptom_location",    "tail": "leaf_margin" }
+  ],
+
+  "node_descriptions": {
+    "apple": "苹果是一种蔷薇科落叶乔木，全球广泛栽培的温带落叶果树。苹果叶片卵形至椭圆形互生，边缘有锯齿，叶面深绿色有光泽。果实为梨果状核果，由子房和花托发育而成，是重要的经济果树。",
+
+    "apple_scab": "苹果黑星病是由苹果黑星菌引起的一种真菌性病害，又名疮痂病，是世界性苹果主要病害之一。病害主要危害叶片、果实和嫩枝，在春季多雨湿润气候条件下爆发严重。叶片正面初期出现橄榄色绒毛状斑点，后变为深褐色凹陷坏死斑，严重时病叶卷曲并提前脱落。果实受害后形成木栓化的疮痂状病斑，显著降低商品价值。",
+
+    "black_rot": "苹果黑腐病由葡萄座腔菌引起，又称蛙眼病，是危害苹果树的重要枝干和果实病害。叶片症状呈典型的蛙眼状——紫褐色边缘内部有同心环纹的圆形斑点，直径约2至5毫米。果实受害后从花萼端开始腐烂，逐渐扩展变为黑色僵果，表面密布黑色分生孢子器。枝条受害形成溃疡状凹陷病斑，树皮纵裂坏死，病菌可在病组织中越冬。",
+
+    "cedar_rust": "苹果锈病由东方胶锈菌引起，是一种转主寄生的真菌病害，需要柏科植物（如圆柏）完成生活史。叶片正面初期出现黄绿色小点，逐渐扩大为橙红色斑，周围出现放射状红色星状外缘。叶片背面相应位置隆起，密布鲜橙黄色须状锈子器，成熟后释放锈孢子。嫩枝受害出现纺锤形菌瘿，严重时导致枝条枯死。春雨是锈孢子侵染的关键条件。",
+
+    "healthy": "健康苹果植株生长正常，无任何明显病害症状。叶片颜色均匀鲜绿富有光泽，质地平滑无异常凸起、凹陷或变色。叶缘形态完整，无卷曲、缺刻或枯焦。果实表面光洁，无病斑、锈斑或虫伤。植株整体长势旺盛，无黄化、萎蔫或异常落叶现象。",
+
+    "venturia_inaequalis": "苹果黑星菌属于子囊菌门，是专性寄生真菌，以子囊孢子作为初侵染源在落叶上越冬。春季在适宜温湿度条件下释放子囊孢子，通过气流传播侵染幼嫩组织。菌丝体在角质层和表皮细胞间扩展，形成表生的菌丝层和分生孢子梗，分生孢子呈深色梨形，进行多次再侵染。",
+
+    "botryosphaeria": "葡萄座腔菌属于子囊菌门葡萄座腔菌科，是一种弱寄生但寄主范围广泛的多食性真菌。病菌以菌丝体、分生孢子器和子囊壳在病枝干、僵果及枯死树皮上越冬。次年产生分生孢子借风雨传播，主要通过伤口、皮孔和自然孔口侵入寄主。高温多湿环境有利于病菌繁殖和侵染。",
+
+    "gymnosporangium": "东方胶锈菌属于担子菌门锈菌目，是转主寄生菌，必须在苹果和松柏之间交替完成完整生活史。在桧柏上形成冬孢子角，雨后胶化后产生担孢子，借风力传播至苹果树。担孢子在苹果叶片上萌发侵入，形成性子器和锈子器，成熟的锈孢子再侵染桧柏。春雨多、气温在15至25摄氏度时侵染最重。",
+
+    "scab_olive_velvet": "橄榄色绒毛斑是黑星病最典型的初期诊断特征。叶片受害初期，正面出现不规则的橄榄色至灰褐色绒毛状霉层，霉层在叶片表面呈天鹅绒质感。这些霉层实际为病原菌的分生孢子梗和分生孢子结构，通过放大镜可观察到细密丝绒状物。绒毛斑通常首先出现在嫩叶表面，随着病斑扩展颜色逐渐加深变为黑褐色。",
+
+    "scab_dark_lesion": "深色凹陷病斑出现在黑星病中后期。病程发展中，绒毛状霉层下的寄主组织坏死，形成边界清晰、略凹陷的黑褐色至近黑色病斑。病斑边缘不光滑，有时周围残留模糊的黄色晕圈。叶片背面的病斑比正面颜色稍浅。多个病斑常融合形成不规则的大型枯死区，导致叶片功能丧失。",
+
+    "scab_yellow_halo": "黄色晕圈是黑星病早期斑点周围的过渡带。在橄榄色病斑的外围，存在一圈宽度不等的褪绿黄色区域，边界模糊不清，与健康绿色组织之间呈现渐变过渡。黄色晕圈反映病原菌毒素在组织中扩散的前沿，是区分黑星病与生理性斑点的重要特征。随着病程推进，晕圈可被深色的坏死组织掩盖。",
+
+    "scab_leaf_curl": "叶片卷曲是黑星病严重侵染的特征性表现。受害严重的叶片因病斑两侧组织生长不均匀而产生扭曲变形，叶缘向上不规则卷曲缩缩。卷曲的叶片显著减少了光合作用面积，也破坏了叶片正常的气体交换功能。幼嫩叶片比老叶更容易发生严重卷曲，是区别于其他苹果叶部病害的重要鉴别特征。",
+
+    "scab_early_defoliation": "早期落叶是黑星病危害最严重的后果。病害严重发生时，大量病叶在夏季即提前变黄脱落，远早于正常秋季落叶。早期落叶导致树体营养积累不足，影响花芽分化和果实发育，并降低树势越冬能力，造成翌年减产。连续多年的早期落叶可导致树势衰退甚至死亡。",
+
+    "br_frog_eye": "蛙眼状轮纹斑是黑腐病最典型的叶部症状。病斑圆形至近圆形，直径约2至5毫米，中央灰白色至浅褐色，边缘紫褐色，与周围健康组织界限分明。病斑内部可见明显的同心轮纹结构，外观酷似青蛙的眼睛，因此得名蛙眼病。轮纹实质为病菌在组织中分层扩张时形成的年轮状坏死带。",
+
+    "br_purple_specks": "紫色小点是黑腐病的初期症状。叶片上首先出现极小的紫褐色至紫色针尖状圆点，通常直径小于1毫米，分散或成簇分布在新梢嫩叶表面。这些小点对应于病菌初次侵入点，此时寄主细胞已开始坏死变色但尚未形成典型的蛙眼状结构。这一阶段持续时间较短，天气适宜时迅速扩展为蛙眼斑。",
+
+    "br_fruit_mummified": "果实干腐僵化是黑腐病最具破坏性的果实症状。病原菌从花萼端或伤口侵入果实后，内部组织腐烂褐变，果肉软化并逐渐干缩。后期果实完全脱水，变为表面粗糙的黑色僵果，内部密布菌丝体。僵果可在枝条上宿存越冬，成为翌年的重要侵染源。切开僵果可见组织已经完全木质化变黑。",
+
+    "br_pycnidia": "黑色分生孢子器是黑腐病晚期的诊断标志。在病斑和僵果表面出现大量凸起的微小黑色颗粒，直径约0.2至0.3毫米，用手触摸有粗糙砂纸感。这些小黑点为病原菌的无性繁殖结构即分生孢子器，内壁产生大量椭圆形无色单胞分生孢子。在潮湿条件下，孢子器顶端孔口会涌出乳白色至淡黄色孢子角。",
+
+    "br_canker_branch": "枝条溃疡斑是黑腐病危害枝干的典型症状。受害枝条的树皮上出现红褐色椭圆形凹陷病斑，病部皮层坏死纵裂，露出内部的木质部。溃疡斑边缘隆起，与健康皮层间形成愈合组织脊。严重时溃疡斑可环绕枝条一周，阻断水分和养分运输，导致上部枝叶枯死。溃疡斑是老病树越冬的主要菌源场所。",
+
+    "rust_orange_pustule": "橙黄色锈子器是锈病最具识别度的特征。叶片背面受侵部位组织增厚隆起，表面密布丛生的鲜橙黄色须状锈子器，长度约1至3毫米，整体呈垫状凸起。锈子器由大量锈孢子链组成，成熟后管状包被顶端开裂，释放出鲜黄色粉末状的锈孢子，随风传播。肉眼观察如同叶片背面粘附了一层金橙色丝绒。",
+
+    "rust_yellow_spot": "黄绿色小斑点是锈病的早期症状。叶片正面首先出现边界模糊的淡黄绿色至柠檬黄色针尖状小点，直径通常小于1毫米，容易被忽略。这些小点对应于担孢子在叶片角质层下萌发侵入的位置。随着菌丝在叶肉细胞间扩展，斑点迅速扩大并向橙红色调转变，同时周围开始出现红色放射状条纹。",
+
+    "rust_red_border": "红色星状外缘是锈病中期叶片正面最显著的特征。在橙黄色病斑的周围，出现不规则放射状的红色至酒红色条纹，向外延伸数毫米至一厘米，形似星芒。这些红色纹路是寄主植物对真菌侵染产生的过敏性防御反应，为酚类物质氧化沉积所致。红色外缘的清晰度和范围与寄主抗病性密切相关。",
+
+    "rust_leaf_thickening": "病部组织增厚是锈病在叶片背面的特征性表现。受侵部位的叶肉组织在海绵组织层区域异常增生增厚，形成肉眼可见的局部肿胀隆起。增厚的组织内部包含发育中的锈子器原基，逐渐突破下表皮外露形成橙黄色锈子器。与健康叶片的厚度相比，增厚区域的叶片厚度可增加2至3倍。",
+
+    "rust_twig_gall": "枝条菌瘿是锈病危害嫩枝的表现。嫩枝受侵部位组织异常增生，形成纺锤形至不规则形的瘤状菌瘿，大小可从数毫米到数厘米不等。菌瘿表面粗糙，初期绿色后变为红褐色至深褐色。菌瘿内部为增生组织包裹的菌丝体，可在其中越冬。严重时菌瘿环绕枝条导致上部枯死。",
+
+    "healthy_green": "均匀绿色叶片是健康苹果叶的典型外观特征。叶片呈均匀一致的鲜绿色至深绿色，正面颜色通常深于背面表皮。叶面有自然光泽，源于健康角质层的蜡质分泌。叶脉网脉清晰，主脉和侧脉的颜色与叶肉无明显反差。无任何斑点、条纹或区域性的颜色异常。",
+
+    "healthy_smooth": "叶片表面平滑是健康叶片的触摸特征。叶面触感平滑一致，无任何凸起、凹陷、粗糙感或颗粒感。角质层完整光滑，强光下有均匀反光。无霉层、粉状物、绒状覆盖物或其他病理性表面结构。叶背触感同样平滑，无增生性肿胀或孢子堆凸起。",
+
+    "healthy_intact": "叶缘完整是健康叶片的重要形态指标。叶片边缘锯齿完整规则，无卷曲、缺刻、撕裂或坏死性枯焦。叶尖和叶基形态正常，无畸形。叶缘组织颜色与叶肉一致，无褪色或褐色的边缘坏死条带。全叶展开正常，无萎缩或皱缩。",
+
+    "color_olive_brown": "橄榄褐色是一种介于橄榄绿色与棕色之间的复合色调，是黑星病初期分生孢子霉层的特征性颜色。在叶片绿色背景上呈现灰绿色至浅棕褐色的过渡外观。",
+    "color_dark_brown": "深褐色是坏死植物组织的常见颜色，反映细胞死亡和酚类物质氧化沉积的程度。在病斑中表现为巧克力色至焦褐色。",
+    "color_purple_brown": "紫褐色是一种紫调与棕色混合的暗色调，常见于黑腐病和多种叶斑病的病斑边缘或初期斑点。",
+    "color_orange_yellow": "橙黄色是锈菌孢子堆的典型颜色，来源于锈孢子细胞壁中类胡萝卜素色素的积累，在叶片绿色背景下非常醒目。",
+    "color_yellow_green": "黄绿色是叶绿素降解初期的颜色表现，介于正常绿色和完全黄化之间，常见于病害早期的褪绿过程。",
+    "color_black": "黑色是组织完全坏死和干腐的终态颜色，代表细胞内容物完全氧化和炭化，常见于僵果和晚期病斑。",
+    "texture_velvet": "绒毛状质地由密集的真菌分生孢子梗和孢子构成，触感和外观类似天鹅绒表面，是活体表生菌丝的典型结构。",
+    "texture_mummified": "干腐僵化是果实水分完全丧失后的木乃伊化质地，组织坚硬皱缩，表面粗糙有褶皱。",
+    "texture_pustular": "凸起孢子堆是锈菌等专性寄生菌突破寄主表皮外露形成的疱状结构，触感颗粒状凸起。",
+    "shape_ring_concentric": "同心轮纹状是病害在组织中周期性扩展形成的年轮状坏死带，表现为明暗相间的环形结构。",
+    "shape_irregular_radial": "放射状星形是锈病红色外缘的扩展形态，以病斑为中心向四周不规则放射延伸，形似不规则星芒。",
+    "shape_depressed": "凹陷状病斑反映坏死组织体积收缩，斑面低于周围健康组织的水平面，边缘通常清晰分明。",
+
+    "leaf_upper": "叶片正面是接受阳光进行光合作用的主要表面，角质层发育较好，颜色深绿有光泽，气孔分布极少。是黑星病、黑腐病、锈病等叶斑型病害症状的主要表现面。",
+    "leaf_lower": "叶片背面是气孔集中分布的下表皮面，颜色浅绿无光泽，角质层较薄。是锈病锈子器破出的主要位置，也是多数病原菌入侵的自然孔口通道。",
+    "leaf_margin": "叶缘指叶片边界的锯齿状轮廓区域，是叶片的生理薄弱区。叶缘卷曲、枯焦或坏死是多种病害（如黑星病）的典型症状之一。",
+    "fruit_surface": "果实表面包括果皮和外层果肉，是多种病害的症状表现部位。黑星病形成疮痂状木栓化病斑，黑腐病从萼端开始腐烂，锈病较少侵染果实。",
+    "fruit_flesh": "果肉内部是果实食用部分，由花托和子房壁发育而来的薄壁细胞组成。黑腐病从内部引起褐变腐烂，导致果肉组织瓦解。",
+    "branch": "枝条树皮是多年生木质化枝条的外层保护组织。黑腐病在此形成溃疡斑，树皮坏死纵裂，是重要的病原越冬场所。",
+    "twig": "嫩枝是当年生未木质化的新梢。锈菌可在嫩枝上形成菌瘿，导致枝条畸形或枯死。幼嫩组织角质层薄，抗侵染能力较弱。",
+    "flower": "花器包括花萼、花瓣、雄蕊和雌蕊，是果树生殖器官。黑星病和黑腐病均可侵染花器，引起花腐症状，导致坐果率下降。",
+
+    "stage_early": "发病初期指症状刚刚出现的阶段，此时病斑面积小、颜色浅、边界模糊。是识别和防治的关键窗口期，诊断难度最高。",
+    "stage_mid": "发病中期指症状充分发展但尚未造成不可逆严重危害的阶段。此时病斑扩大、特征鲜明、典型诊断特征齐全，是识别准确率最高的阶段。",
+    "stage_late": "发病晚期指病害已造成严重组织损伤和功能丧失的阶段，特征是大量组织坏死、落叶、果实腐烂或枝条枯死。防治效果差，以清除病残体为主。"
+  }
+}

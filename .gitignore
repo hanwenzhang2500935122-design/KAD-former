@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# Local environments
+.venv/
+venv/
+env/
+.env
+
+# Runtime outputs
+checkpoints/
+logs/
+*.log
+
+# Datasets and generated artifacts
+data/plantvillage/
+data/knowledge_graph/node_embeddings.pt
+
+# Downloaded model weights
+src/models/bert-base-chinese/
+/models/
+
+# Local assistant/tooling state
+.workbuddy/
