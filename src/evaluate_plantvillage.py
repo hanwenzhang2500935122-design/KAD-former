@@ -53,6 +53,10 @@ def build_model(args: argparse.Namespace) -> torch.nn.Module:
         vit_model_name=args.vit_model,
         pretrained=args.vit_checkpoint is None,
         vit_checkpoint=args.vit_checkpoint,
+        disable_akg=args.disable_akg,
+        disable_sam=args.disable_sam,
+        disable_kga=args.disable_kga,
+        ablation_knowledge_tokens=args.ablation_knowledge_tokens,
     )
 
 
@@ -142,6 +146,15 @@ def main() -> None:
     parser.add_argument("--vit-checkpoint", type=str, default=None)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--disable-akg", action="store_true", help="Evaluate a KAD ablation checkpoint trained without AKG.")
+    parser.add_argument("--disable-sam", action="store_true", help="Evaluate a KAD ablation checkpoint trained without SAM.")
+    parser.add_argument("--disable-kga", action="store_true", help="Evaluate a KAD ablation checkpoint trained without KGA.")
+    parser.add_argument(
+        "--ablation-knowledge-tokens",
+        type=int,
+        default=22,
+        help="Number of learnable class knowledge tokens used by a --disable-akg checkpoint.",
+    )
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

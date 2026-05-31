@@ -27,20 +27,37 @@ class KADFormerLite(nn.Module):
         vit_checkpoint: str | Path | None = None,
         knowledge_gt_mix_ratio: float = 0.5,
         confidence_weighted_alignment: bool = True,
+        disable_akg: bool = False,
+        disable_sam: bool = False,
+        disable_kga: bool = False,
+        ablation_knowledge_tokens: int = 22,
     ) -> None:
         super().__init__()
         if not 0.0 <= knowledge_gt_mix_ratio <= 1.0:
             raise ValueError("knowledge_gt_mix_ratio must be in [0, 1].")
+        if ablation_knowledge_tokens < 1:
+            raise ValueError("ablation_knowledge_tokens must be positive.")
         self.num_classes = num_classes
         self.knowledge_gt_mix_ratio = knowledge_gt_mix_ratio
         self.confidence_weighted_alignment = confidence_weighted_alignment
+        self.disable_akg = disable_akg
+        self.disable_sam = disable_sam
+        self.disable_kga = disable_kga
+        self.ablation_knowledge_tokens = ablation_knowledge_tokens
         self.vit = ViTBackbone(
             model_name=vit_model_name,
             pretrained=pretrained,
             output_dim=768,
             checkpoint_path=vit_checkpoint,
         )
-        self.akg = AKG(embeddings_path)
+        self.akg = None if disable_akg else AKG(embeddings_path)
+        if disable_akg:
+            self.learnable_knowledge_embeddings = nn.Parameter(
+                torch.empty(num_classes, ablation_knowledge_tokens, 256)
+            )
+            nn.init.trunc_normal_(self.learnable_knowledge_embeddings, std=0.02)
+        else:
+            self.learnable_knowledge_embeddings = None
         self.sam = SAM(vision_dim=768, knowledge_dim=256, unified_dim=512, num_heads=8)
         self.kga = KGALite(dim=512, attn_dim=256, num_heads=8, num_branches=3)
         self.coarse_classifier = nn.Linear(768, num_classes)
@@ -71,8 +88,21 @@ class KADFormerLite(nn.Module):
             )
             mix_ratio = self.knowledge_gt_mix_ratio
             knowledge_probs = (1.0 - mix_ratio) * coarse_probs + mix_ratio * gt_probs
-        knowledge_vec = self.akg(knowledge_probs)
-        if return_aux:
+        if self.disable_akg:
+            if self.learnable_knowledge_embeddings is None:
+                raise RuntimeError("AKG ablation expects learnable knowledge embeddings.")
+            knowledge_table = self.learnable_knowledge_embeddings.to(dtype=patch_tokens.dtype)
+            knowledge_vec = torch.einsum("bc,ckd->bkd", knowledge_probs, knowledge_table)
+        else:
+            if self.akg is None:
+                raise RuntimeError("AKG is disabled but no fallback knowledge tensor was created.")
+            knowledge_vec = self.akg(knowledge_probs)
+
+        if self.disable_sam:
+            Zv = self.sam.vision_proj(patch_tokens)
+            Zk = self.sam.knowledge_proj(knowledge_vec)
+            alignment_loss = patch_tokens.new_zeros(())
+        elif return_aux:
             alignment_weights = None
             if self.training and labels is not None and self.confidence_weighted_alignment:
                 alignment_weights = coarse_probs.gather(1, labels[:, None]).squeeze(1).detach()
@@ -86,7 +116,13 @@ class KADFormerLite(nn.Module):
         else:
             Zv, Zk = self.sam(patch_tokens, knowledge_vec)
             alignment_loss = patch_tokens.new_zeros(())
-        if return_attention:
+        if self.disable_sam:
+            alignment_weights = None
+
+        if self.disable_kga:
+            guided_visual = Zv
+            kga_attention = patch_tokens.new_zeros(())
+        elif return_attention:
             guided_visual, kga_attention = self.kga(Zv, Zk, return_attention=True)
         else:
             guided_visual = self.kga(Zv, Zk)

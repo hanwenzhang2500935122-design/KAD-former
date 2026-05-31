@@ -137,7 +137,29 @@ def build_model(args: argparse.Namespace) -> nn.Module:
         vit_checkpoint=args.vit_checkpoint,
         knowledge_gt_mix_ratio=args.knowledge_gt_mix_ratio,
         confidence_weighted_alignment=not args.no_confidence_weighted_alignment,
+        disable_akg=args.disable_akg,
+        disable_sam=args.disable_sam,
+        disable_kga=args.disable_kga,
+        ablation_knowledge_tokens=args.ablation_knowledge_tokens,
     )
+
+
+def build_run_name(args: argparse.Namespace) -> str:
+    """Build a checkpoint/log stem that records the ablated modules."""
+    if args.baseline:
+        return "vit_baseline"
+
+    disabled_modules = []
+    if args.disable_akg:
+        disabled_modules.append("no_akg")
+    if args.disable_sam:
+        disabled_modules.append("no_sam")
+    if args.disable_kga:
+        disabled_modules.append("no_kga")
+
+    if disabled_modules:
+        return "kad_former_" + "_".join(disabled_modules)
+    return "kad_former"
 
 
 def main() -> None:
@@ -187,6 +209,15 @@ def main() -> None:
             "uses coarse_probs[GT] as a detached sample weight during training."
         ),
     )
+    parser.add_argument("--disable-akg", action="store_true", help="Ablation: replace AKG with learnable class knowledge tokens.")
+    parser.add_argument("--disable-sam", action="store_true", help="Ablation: bypass SAM attention/alignment and only use its input projections.")
+    parser.add_argument("--disable-kga", action="store_true", help="Ablation: bypass KGA and classify from SAM visual features plus ViT CLS.")
+    parser.add_argument(
+        "--ablation-knowledge-tokens",
+        type=int,
+        default=22,
+        help="Number of learnable class knowledge tokens used when --disable-akg is enabled.",
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -207,7 +238,7 @@ def main() -> None:
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
 
-    run_name = "vit_baseline" if args.baseline else "kad_former"
+    run_name = build_run_name(args)
     checkpoint_dir = Path(args.checkpoint_dir)
     log_path = Path(args.log_dir) / f"{run_name}.csv"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
