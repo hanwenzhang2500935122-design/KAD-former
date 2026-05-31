@@ -90,6 +90,78 @@ def build_edges(kg: dict[str, Any], id_to_idx: dict[str, int]) -> dict[str, list
     return edges_by_relation
 
 
+def build_class_knowledge_indices(
+    kg: dict[str, Any],
+    id_to_idx: dict[str, int],
+    max_tokens: int | None = None,
+) -> tuple[dict[str, list[int]], dict[str, list[str]]]:
+    """
+    Build disease-specific knowledge token lists.
+
+    Each class receives the disease node plus its local KG neighborhood:
+    disease -> pathogen/symptoms and symptom -> location/stage/attributes.
+    Lists are padded to the same length by repeating the disease node so AKG
+    can return a dense tensor of shape (classes, tokens, dim).
+    """
+    first_hop_relations = {"disease_cause", "disease_symptom", "differentiated_by"}
+    second_hop_relations = {
+        "symptom_location",
+        "symptom_stage",
+        "symptom_has_color",
+        "symptom_has_texture",
+        "symptom_has_shape",
+        "feature_evidence",
+    }
+
+    adjacency: dict[str, list[tuple[str, str]]] = {}
+    for triple in kg.get("triples", []):
+        adjacency.setdefault(triple["head"], []).append((triple["relation"], triple["tail"]))
+
+    raw_ids_by_disease: dict[str, list[str]] = {}
+    for disease_id in DISEASE_ORDER:
+        ordered_ids = [disease_id]
+        seen = {disease_id}
+
+        first_hop = [
+            tail
+            for relation, tail in adjacency.get(disease_id, [])
+            if relation in first_hop_relations
+        ]
+        second_hop: list[str] = []
+        for node_id in first_hop:
+            if node_id not in seen:
+                ordered_ids.append(node_id)
+                seen.add(node_id)
+            second_hop.extend(
+                tail
+                for relation, tail in adjacency.get(node_id, [])
+                if relation in second_hop_relations
+            )
+
+        for node_id in second_hop:
+            if node_id not in seen:
+                ordered_ids.append(node_id)
+                seen.add(node_id)
+
+        ordered_ids = [node_id for node_id in ordered_ids if node_id in id_to_idx]
+        raw_ids_by_disease[disease_id] = ordered_ids
+
+    if max_tokens is None:
+        target_len = max(len(ids) for ids in raw_ids_by_disease.values())
+    else:
+        target_len = max(1, max_tokens)
+
+    ids_by_disease: dict[str, list[str]] = {}
+    indices_by_disease: dict[str, list[int]] = {}
+    for disease_id, node_ids in raw_ids_by_disease.items():
+        clipped = node_ids[:target_len]
+        padded = clipped + [disease_id] * max(0, target_len - len(clipped))
+        ids_by_disease[disease_id] = padded
+        indices_by_disease[disease_id] = [id_to_idx[node_id] for node_id in padded]
+
+    return indices_by_disease, ids_by_disease
+
+
 def encode_descriptions_with_bert(
     descriptions: list[str],
     model_name: str = "bert-base-chinese",
@@ -232,6 +304,7 @@ def main(
     model_name: str = "bert-base-chinese",
     force_download: bool = False,
     fallback_random: bool = False,
+    max_knowledge_tokens: int | None = None,
 ) -> None:
     """
     Run the full KG precomputation pipeline and save node embeddings.
@@ -255,6 +328,11 @@ def main(
     data = build_hetero_graph(len(idx_to_id), edges_by_relation, bert_embeddings)
     node_embeddings = propagate_gnn(data, hidden_dim=256, num_layers=2)
     disease_to_idx = {disease_id: id_to_idx[disease_id] for disease_id in DISEASE_ORDER}
+    class_knowledge_indices, class_knowledge_ids = build_class_knowledge_indices(
+        kg,
+        id_to_idx,
+        max_tokens=max_knowledge_tokens,
+    )
 
     torch.save(
         {
@@ -262,11 +340,17 @@ def main(
             "idx_to_id": idx_to_id,
             "idx_to_type": idx_to_type,
             "disease_to_idx": disease_to_idx,
+            "class_knowledge_indices": class_knowledge_indices,
+            "class_knowledge_ids": class_knowledge_ids,
         },
         output_file,
     )
     print(f"Saved KG embeddings: {output_file}")
     print(f"nodes={len(idx_to_id)} relations={len(edges_by_relation)} shape={tuple(node_embeddings.shape)}")
+    print(
+        "knowledge_tokens_per_class="
+        f"{ {disease_id: len(indices) for disease_id, indices in class_knowledge_indices.items()} }"
+    )
 
 
 if __name__ == "__main__":
@@ -289,6 +373,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Use random 768-d text embeddings if BERT loading fails. For smoke tests only.",
     )
+    parser.add_argument(
+        "--max-knowledge-tokens",
+        type=int,
+        default=None,
+        help="Optional cap for disease-specific knowledge tokens. Defaults to the largest disease subgraph.",
+    )
     args = parser.parse_args()
     main(
         args.json_path,
@@ -296,4 +386,5 @@ if __name__ == "__main__":
         model_name=args.model_name,
         force_download=args.force_download,
         fallback_random=args.fallback_random,
+        max_knowledge_tokens=args.max_knowledge_tokens,
     )

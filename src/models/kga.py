@@ -45,13 +45,26 @@ class _KnowledgeAttentionBlock(nn.Module):
         grid = self.spatial_reconstruct(grid)
         return grid.flatten(2).transpose(1, 2)
 
-    def forward(self, Zv: torch.Tensor, Zk: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        Zv: torch.Tensor,
+        Zk: torch.Tensor,
+        return_attention: bool = False,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         queries = self._smooth_queries(self.query_proj(Zv))
         keys_values = self.key_value_proj(Zk)
-        guided, _ = self.cross_attn(queries, keys_values, keys_values, need_weights=False)
+        guided, attention = self.cross_attn(
+            queries,
+            keys_values,
+            keys_values,
+            need_weights=return_attention,
+            average_attn_weights=False,
+        )
         guided = self.output_proj(guided)
         output = self.norm1(Zv + guided)
         output = self.norm2(output + self.ffn(output))
+        if return_attention:
+            return output, attention
         return output
 
 
@@ -61,7 +74,7 @@ class KGALite(nn.Module):
 
     Inputs:
       Zv: (batch, 196, 512)
-      Zk: (batch, 1, 512)
+      Zk: (batch, knowledge_tokens, 512)
     Output:
       knowledge-guided visual features with shape (batch, 196, 512).
     """
@@ -95,7 +108,24 @@ class KGALite(nn.Module):
         )
         self.output_norm = nn.LayerNorm(dim)
 
-    def forward(self, Zv: torch.Tensor, Zk: torch.Tensor) -> torch.Tensor:
-        branch_outputs = [branch(Zv, Zk) for branch in self.branches]
+    def forward(
+        self,
+        Zv: torch.Tensor,
+        Zk: torch.Tensor,
+        return_attention: bool = False,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        branch_outputs: list[torch.Tensor] = []
+        branch_attentions: list[torch.Tensor] = []
+        for branch in self.branches:
+            if return_attention:
+                branch_output, branch_attention = branch(Zv, Zk, return_attention=True)
+                branch_outputs.append(branch_output)
+                branch_attentions.append(branch_attention)
+            else:
+                branch_outputs.append(branch(Zv, Zk))
+
         fused = self.fusion(torch.cat(branch_outputs, dim=-1))
-        return self.output_norm(Zv + fused)
+        output = self.output_norm(Zv + fused)
+        if return_attention:
+            return output, torch.stack(branch_attentions, dim=0)
+        return output

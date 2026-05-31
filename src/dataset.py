@@ -9,6 +9,7 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import DataLoader, Dataset
+from torchvision.datasets import ImageFolder
 from torchvision import transforms
 from torchvision.datasets.utils import download_and_extract_archive
 
@@ -18,6 +19,12 @@ CLASS_TO_LABEL: dict[str, int] = {
     "Apple___Black_rot": 1,
     "Apple___Cedar_apple_rust": 2,
     "Apple___healthy": 3,
+}
+
+PLANT_PATHOLOGY_CLASS_TO_LABEL: dict[str, int] = {
+    "scab": 0,
+    "rust": 2,
+    "healthy": 3,
 }
 
 PLANTVILLAGE_URL = (
@@ -140,6 +147,40 @@ class ApplePlantVillage(Dataset[tuple[torch.Tensor, int]]):
         return [label for _, label in self.samples]
 
 
+class RemappedImageFolder(Dataset[tuple[torch.Tensor, int]]):
+    """ImageFolder wrapper that remaps class indices into the model label space."""
+
+    def __init__(
+        self,
+        root: str | Path,
+        class_to_label: dict[str, int],
+        indices: list[int] | None = None,
+        transform: Callable | None = None,
+    ) -> None:
+        self.dataset = ImageFolder(str(root), transform=transform)
+        self.class_to_label = class_to_label
+        missing = set(self.dataset.classes) - set(class_to_label)
+        if missing:
+            raise ValueError(f"Unexpected classes in {root}: {sorted(missing)}")
+        self.indices = indices if indices is not None else list(range(len(self.dataset.samples)))
+        self.remapped_targets = [
+            class_to_label[self.dataset.classes[self.dataset.targets[index]]]
+            for index in self.indices
+        ]
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
+        image, _ = self.dataset[self.indices[index]]
+        return image, self.remapped_targets[index]
+
+    @property
+    def targets(self) -> list[int]:
+        """Return remapped labels."""
+        return self.remapped_targets
+
+
 def _split_indices(targets: list[int], seed: int) -> tuple[list[int], list[int], list[int]]:
     all_indices = list(range(len(targets)))
     train_idx, tmp_idx, train_y, tmp_y = train_test_split(
@@ -158,9 +199,10 @@ def _split_indices(targets: list[int], seed: int) -> tuple[list[int], list[int],
     return list(train_idx), list(val_idx), list(test_idx)
 
 
-def describe_dataset(name: str, dataset: ApplePlantVillage) -> None:
+def describe_dataset(name: str, dataset: Dataset) -> None:
     """Print sample count and class distribution."""
-    counts = Counter(dataset.targets)
+    targets = getattr(dataset, "targets")
+    counts = Counter(targets)
     distribution = {class_name: counts[label] for class_name, label in CLASS_TO_LABEL.items()}
     print(f"{name}: {len(dataset)} samples | {distribution}")
 
@@ -200,14 +242,90 @@ def get_dataloaders(
     return train_loader, val_loader, test_loader
 
 
+def get_plant_pathology_dataloaders(
+    batch_size: int = 16,
+    num_workers: int = 4,
+    data_root: str | Path = "data/plant_pathology_3class",
+    seed: int = 42,
+) -> tuple[DataLoader, DataLoader, DataLoader]:
+    """Return train, validation, and test dataloaders for Plant Pathology 3-class data."""
+    root = Path(data_root)
+    if not root.exists():
+        raise FileNotFoundError(f"Plant Pathology ImageFolder root not found: {root}")
+
+    base_dataset = RemappedImageFolder(root, class_to_label=PLANT_PATHOLOGY_CLASS_TO_LABEL)
+    train_idx, val_idx, test_idx = _split_indices(base_dataset.targets, seed=seed)
+    train_set = RemappedImageFolder(
+        root,
+        class_to_label=PLANT_PATHOLOGY_CLASS_TO_LABEL,
+        indices=train_idx,
+        transform=build_transforms(True),
+    )
+    val_set = RemappedImageFolder(
+        root,
+        class_to_label=PLANT_PATHOLOGY_CLASS_TO_LABEL,
+        indices=val_idx,
+        transform=build_transforms(False),
+    )
+    test_set = RemappedImageFolder(
+        root,
+        class_to_label=PLANT_PATHOLOGY_CLASS_TO_LABEL,
+        indices=test_idx,
+        transform=build_transforms(False),
+    )
+
+    describe_dataset("train", train_set)
+    describe_dataset("val", val_set)
+    describe_dataset("test", test_set)
+
+    loader_kwargs = {
+        "batch_size": batch_size,
+        "num_workers": num_workers,
+        "pin_memory": torch.cuda.is_available(),
+    }
+    train_loader = DataLoader(train_set, shuffle=True, drop_last=False, **loader_kwargs)
+    val_loader = DataLoader(val_set, shuffle=False, drop_last=False, **loader_kwargs)
+    test_loader = DataLoader(test_set, shuffle=False, drop_last=False, **loader_kwargs)
+    return train_loader, val_loader, test_loader
+
+
+def get_dataloaders_by_name(
+    dataset_name: str,
+    batch_size: int = 16,
+    num_workers: int = 4,
+    data_root: str | Path | None = None,
+    seed: int = 42,
+    download: bool = True,
+) -> tuple[DataLoader, DataLoader, DataLoader]:
+    """Dispatch dataloader creation by dataset name."""
+    if dataset_name == "plantvillage":
+        return get_dataloaders(
+            batch_size=batch_size,
+            num_workers=num_workers,
+            data_root=data_root,
+            seed=seed,
+            download=download,
+        )
+    if dataset_name == "plant_pathology":
+        return get_plant_pathology_dataloaders(
+            batch_size=batch_size,
+            num_workers=num_workers,
+            data_root=data_root or "data/plant_pathology_3class",
+            seed=seed,
+        )
+    raise ValueError(f"Unsupported dataset: {dataset_name}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Inspect PlantVillage apple dataloaders.")
     parser.add_argument("--data-root", type=str, default=str(_default_data_root()))
+    parser.add_argument("--dataset", choices=("plantvillage", "plant_pathology"), default="plantvillage")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--no-download", action="store_true")
     args = parser.parse_args()
-    get_dataloaders(
+    get_dataloaders_by_name(
+        dataset_name=args.dataset,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         data_root=args.data_root,

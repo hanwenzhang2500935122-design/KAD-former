@@ -5,9 +5,9 @@
     "status": "DRAFT - requires expert review",
     "note": "PlantVillage Apple subset: 4 classes (Scab, Black Rot, Rust, Healthy)",
     "version": "1.0",
-    "total_entities": 33,
-    "total_relations": 6,
-    "total_triples": 106
+    "total_entities": 57,
+    "total_relations": 11,
+    "total_triples": 108
   },
 
   "entities": {
@@ -73,6 +73,16 @@
       { "id": "stage_early",   "label": "发病初期", "label_en": "Early Stage" },
       { "id": "stage_mid",     "label": "发病中期", "label_en": "Middle Stage" },
       { "id": "stage_late",    "label": "发病晚期", "label_en": "Late Stage" }
+    ],
+    "key_visual_feature": [
+      { "id": "kv_scab_olive_velvet_patch",       "label": "olive velvet scab patch",       "label_en": "Olive-brown velvet scab patch",    "class": "key_visual_feature" },
+      { "id": "kv_scab_dark_sunken_lesion",       "label": "dark sunken scab lesion",       "label_en": "Dark sunken scab-like lesion",    "class": "key_visual_feature" },
+      { "id": "kv_scab_irregular_corky_spot",     "label": "irregular corky scab spot",     "label_en": "Irregular corky scab spot",       "class": "key_visual_feature" },
+      { "id": "kv_scab_diffuse_yellow_halo",      "label": "diffuse yellow halo",           "label_en": "Diffuse yellow halo around scab", "class": "key_visual_feature" },
+      { "id": "kv_rust_orange_yellow_pustule",    "label": "orange yellow rust pustule",    "label_en": "Orange-yellow rust pustule",      "class": "key_visual_feature" },
+      { "id": "kv_rust_red_star_border",          "label": "red star-like rust border",     "label_en": "Red star-like rust border",       "class": "key_visual_feature" },
+      { "id": "kv_rust_lower_leaf_spore_cluster", "label": "lower leaf spore cluster",      "label_en": "Lower-leaf orange spore cluster", "class": "key_visual_feature" },
+      { "id": "kv_rust_raised_tubular_aecia",     "label": "raised tubular rust aecia",     "label_en": "Raised tubular rust aecia",       "class": "key_visual_feature" }
     ]
   },
 
@@ -84,7 +94,10 @@
     { "id": "symptom_stage",      "label": "症状→阶段",     "head_type": "symptom",    "tail_type": "stage" },
     { "id": "symptom_has_color",  "label": "症状→颜色属性", "head_type": "symptom",    "tail_type": "symptom_attribute" },
     { "id": "symptom_has_texture","label": "症状→质地属性", "head_type": "symptom",    "tail_type": "symptom_attribute" },
-    { "id": "symptom_has_shape",  "label": "症状→形状特征", "head_type": "symptom",    "tail_type": "symptom_attribute" }
+    { "id": "symptom_has_shape",  "label": "症状→形状特征", "head_type": "symptom",    "tail_type": "symptom_attribute" },
+    { "id": "differentiated_by",  "label": "病害→关键视觉特征", "head_type": "disease", "tail_type": "key_visual_feature" },
+    { "id": "feature_evidence",   "label": "关键视觉特征→证据节点", "head_type": "key_visual_feature", "tail_type": "entity" },
+    { "id": "confused_with",      "label": "易混淆病害", "head_type": "disease", "tail_type": "disease" }
   ],
 
   "triples": [
@@ -118,6 +131,37 @@
     { "head": "healthy",         "relation": "disease_symptom",    "tail": "healthy_green" },
     { "head": "healthy",         "relation": "disease_symptom",    "tail": "healthy_smooth" },
     { "head": "healthy",         "relation": "disease_symptom",    "tail": "healthy_intact" },
+
+    { "head": "apple_scab",      "relation": "differentiated_by",  "tail": "kv_scab_olive_velvet_patch" },
+    { "head": "apple_scab",      "relation": "differentiated_by",  "tail": "kv_scab_dark_sunken_lesion" },
+    { "head": "apple_scab",      "relation": "differentiated_by",  "tail": "kv_scab_irregular_corky_spot" },
+    { "head": "apple_scab",      "relation": "differentiated_by",  "tail": "kv_scab_diffuse_yellow_halo" },
+    { "head": "cedar_rust",      "relation": "differentiated_by",  "tail": "kv_rust_orange_yellow_pustule" },
+    { "head": "cedar_rust",      "relation": "differentiated_by",  "tail": "kv_rust_red_star_border" },
+    { "head": "cedar_rust",      "relation": "differentiated_by",  "tail": "kv_rust_lower_leaf_spore_cluster" },
+    { "head": "cedar_rust",      "relation": "differentiated_by",  "tail": "kv_rust_raised_tubular_aecia" },
+    { "head": "apple_scab",      "relation": "confused_with",      "tail": "cedar_rust" },
+    { "head": "cedar_rust",      "relation": "confused_with",      "tail": "apple_scab" },
+
+    { "head": "kv_scab_olive_velvet_patch",       "relation": "feature_evidence", "tail": "scab_olive_velvet" },
+    { "head": "kv_scab_olive_velvet_patch",       "relation": "feature_evidence", "tail": "color_olive_brown" },
+    { "head": "kv_scab_olive_velvet_patch",       "relation": "feature_evidence", "tail": "texture_velvet" },
+    { "head": "kv_scab_dark_sunken_lesion",       "relation": "feature_evidence", "tail": "scab_dark_lesion" },
+    { "head": "kv_scab_dark_sunken_lesion",       "relation": "feature_evidence", "tail": "color_dark_brown" },
+    { "head": "kv_scab_dark_sunken_lesion",       "relation": "feature_evidence", "tail": "shape_depressed" },
+    { "head": "kv_scab_irregular_corky_spot",     "relation": "feature_evidence", "tail": "scab_dark_lesion" },
+    { "head": "kv_scab_irregular_corky_spot",     "relation": "feature_evidence", "tail": "fruit_surface" },
+    { "head": "kv_scab_diffuse_yellow_halo",      "relation": "feature_evidence", "tail": "scab_yellow_halo" },
+    { "head": "kv_scab_diffuse_yellow_halo",      "relation": "feature_evidence", "tail": "color_yellow_green" },
+    { "head": "kv_rust_orange_yellow_pustule",    "relation": "feature_evidence", "tail": "rust_orange_pustule" },
+    { "head": "kv_rust_orange_yellow_pustule",    "relation": "feature_evidence", "tail": "color_orange_yellow" },
+    { "head": "kv_rust_orange_yellow_pustule",    "relation": "feature_evidence", "tail": "texture_pustular" },
+    { "head": "kv_rust_red_star_border",          "relation": "feature_evidence", "tail": "rust_red_border" },
+    { "head": "kv_rust_red_star_border",          "relation": "feature_evidence", "tail": "shape_irregular_radial" },
+    { "head": "kv_rust_lower_leaf_spore_cluster", "relation": "feature_evidence", "tail": "rust_orange_pustule" },
+    { "head": "kv_rust_lower_leaf_spore_cluster", "relation": "feature_evidence", "tail": "leaf_lower" },
+    { "head": "kv_rust_raised_tubular_aecia",     "relation": "feature_evidence", "tail": "rust_leaf_thickening" },
+    { "head": "kv_rust_raised_tubular_aecia",     "relation": "feature_evidence", "tail": "texture_pustular" },
 
     { "head": "scab_olive_velvet",     "relation": "symptom_has_color",   "tail": "color_olive_brown" },
     { "head": "scab_olive_velvet",     "relation": "symptom_has_texture", "tail": "texture_velvet" },
@@ -233,6 +277,15 @@
     "healthy_smooth": "叶片表面平滑是健康叶片的触摸特征。叶面触感平滑一致，无任何凸起、凹陷、粗糙感或颗粒感。角质层完整光滑，强光下有均匀反光。无霉层、粉状物、绒状覆盖物或其他病理性表面结构。叶背触感同样平滑，无增生性肿胀或孢子堆凸起。",
 
     "healthy_intact": "叶缘完整是健康叶片的重要形态指标。叶片边缘锯齿完整规则，无卷曲、缺刻、撕裂或坏死性枯焦。叶尖和叶基形态正常，无畸形。叶缘组织颜色与叶肉一致，无褪色或褐色的边缘坏死条带。全叶展开正常，无萎缩或皱缩。",
+
+    "kv_scab_olive_velvet_patch": "A key discriminative feature of apple scab: olive-brown to gray-brown velvet-like fungal growth on the leaf or fruit surface. It is usually matte, fuzzy, and irregular rather than bright orange.",
+    "kv_scab_dark_sunken_lesion": "A key discriminative feature of apple scab: dark brown, sunken, scab-like necrotic lesions with rough margins. This feature separates scab from rust pustules, which are raised and orange-yellow.",
+    "kv_scab_irregular_corky_spot": "A key discriminative feature of apple scab: irregular corky scab spots, especially on fruit surface, with a rough and cracked appearance. This visual cue emphasizes texture and lesion boundary.",
+    "kv_scab_diffuse_yellow_halo": "A supporting feature of apple scab: a soft diffuse yellow halo around olive or dark scab lesions. The halo is less star-shaped and less red than cedar apple rust borders.",
+    "kv_rust_orange_yellow_pustule": "A key discriminative feature of cedar apple rust: bright orange-yellow pustules or spore masses. The color is vivid and saturated, unlike the dull olive-brown tone of scab.",
+    "kv_rust_red_star_border": "A key discriminative feature of cedar apple rust: red to orange-red star-like radial borders around lesions. This radial pattern helps distinguish rust from the irregular dark scab lesions.",
+    "kv_rust_lower_leaf_spore_cluster": "A key discriminative feature of cedar apple rust: orange spore clusters on the lower leaf surface. Location on the leaf underside is important evidence for rust.",
+    "kv_rust_raised_tubular_aecia": "A key discriminative feature of cedar apple rust: raised tubular aecia or pustular structures caused by thickened infected tissue. This raised structure contrasts with sunken scab lesions.",
 
     "color_olive_brown": "橄榄褐色是一种介于橄榄绿色与棕色之间的复合色调，是黑星病初期分生孢子霉层的特征性颜色。在叶片绿色背景上呈现灰绿色至浅棕褐色的过渡外观。",
     "color_dark_brown": "深褐色是坏死植物组织的常见颜色，反映细胞死亡和酚类物质氧化沉积的程度。在病斑中表现为巧克力色至焦褐色。",

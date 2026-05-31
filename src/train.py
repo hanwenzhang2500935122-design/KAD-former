@@ -10,7 +10,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from tqdm import tqdm
 
-from dataset import get_dataloaders
+from dataset import get_dataloaders_by_name
 from models.kad_former import KADFormerLite
 from models.vit_backbone import ViTBackbone
 from utils import AverageMeter, compute_metrics, set_seed
@@ -24,9 +24,15 @@ class PureViTClassifier(nn.Module):
         num_classes: int = 4,
         vit_model_name: str = "vit_small_patch16_224",
         pretrained: bool = True,
+        vit_checkpoint: str | Path | None = None,
     ) -> None:
         super().__init__()
-        self.vit = ViTBackbone(model_name=vit_model_name, pretrained=pretrained, output_dim=768)
+        self.vit = ViTBackbone(
+            model_name=vit_model_name,
+            pretrained=pretrained,
+            output_dim=768,
+            checkpoint_path=vit_checkpoint,
+        )
         self.classifier = nn.Sequential(
             nn.LayerNorm(768),
             nn.Dropout(0.2),
@@ -49,6 +55,7 @@ def run_one_epoch(
     device: torch.device,
     optimizer: torch.optim.Optimizer | None = None,
     alignment_loss_weight: float = 0.1,
+    coarse_loss_weight: float = 0.2,
 ) -> tuple[float, float, float, float]:
     """Train or evaluate one epoch and return loss plus metrics."""
     is_train = optimizer is not None
@@ -79,7 +86,13 @@ def run_one_epoch(
 
             cls_loss = criterion(logits, labels)
             alignment_loss = aux_losses.get("alignment_loss", logits.new_zeros(()))
-            loss = cls_loss + alignment_loss_weight * alignment_loss
+            coarse_logits = aux_losses.get("coarse_logits")
+            coarse_loss = (
+                criterion(coarse_logits, labels)
+                if coarse_logits is not None
+                else logits.new_zeros(())
+            )
+            loss = cls_loss + alignment_loss_weight * alignment_loss + coarse_loss_weight * coarse_loss
             if is_train:
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -114,18 +127,28 @@ def build_model(args: argparse.Namespace) -> nn.Module:
             num_classes=4,
             vit_model_name=args.vit_model,
             pretrained=not args.no_pretrained,
+            vit_checkpoint=args.vit_checkpoint,
         )
     return KADFormerLite(
         num_classes=4,
         embeddings_path=args.embeddings_path,
         vit_model_name=args.vit_model,
         pretrained=not args.no_pretrained,
+        vit_checkpoint=args.vit_checkpoint,
+        knowledge_gt_mix_ratio=args.knowledge_gt_mix_ratio,
+        confidence_weighted_alignment=not args.no_confidence_weighted_alignment,
     )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train KAD-Former mini demo.")
     parser.add_argument("--baseline", action="store_true", help="Train pure ViT baseline.")
+    parser.add_argument(
+        "--dataset",
+        choices=("plantvillage", "plant_pathology"),
+        default="plantvillage",
+        help="Dataset to train on.",
+    )
     parser.add_argument("--data-root", type=str, default=None)
     parser.add_argument("--embeddings-path", type=str, default=str(default_embeddings_path()))
     parser.add_argument("--epochs", type=int, default=30)
@@ -135,18 +158,43 @@ def main() -> None:
     parser.add_argument("--weight-decay", type=float, default=0.05)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--vit-model", type=str, default="vit_small_patch16_224")
+    parser.add_argument(
+        "--vit-checkpoint",
+        type=str,
+        default=None,
+        help="Local timm checkpoint file or directory for the ViT backbone.",
+    )
     parser.add_argument("--no-pretrained", action="store_true")
     parser.add_argument("--no-download", action="store_true")
     parser.add_argument("--checkpoint-dir", type=str, default="checkpoints")
     parser.add_argument("--log-dir", type=str, default="logs")
     parser.add_argument("--alignment-loss-weight", type=float, default=0.1)
+    parser.add_argument("--coarse-loss-weight", type=float, default=0.2)
+    parser.add_argument(
+        "--knowledge-gt-mix-ratio",
+        type=float,
+        default=0.5,
+        help=(
+            "During KAD training, mix this fraction of GT one-hot knowledge with coarse "
+            "probability knowledge. Evaluation and inference always use coarse probabilities only."
+        ),
+    )
+    parser.add_argument(
+        "--no-confidence-weighted-alignment",
+        action="store_true",
+        help=(
+            "Disable confidence-weighted SAM alignment. By default, SAM alignment "
+            "uses coarse_probs[GT] as a detached sample weight during training."
+        ),
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    train_loader, val_loader, _ = get_dataloaders(
+    train_loader, val_loader, _ = get_dataloaders_by_name(
+        dataset_name=args.dataset,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         data_root=args.data_root,
@@ -173,6 +221,7 @@ def main() -> None:
             device,
             optimizer,
             alignment_loss_weight=args.alignment_loss_weight,
+            coarse_loss_weight=args.coarse_loss_weight,
         )
         val_loss, val_acc, val_f1_macro, val_f1_weighted = run_one_epoch(
             model,
@@ -181,6 +230,7 @@ def main() -> None:
             device,
             optimizer=None,
             alignment_loss_weight=args.alignment_loss_weight,
+            coarse_loss_weight=0.0,
         )
         scheduler.step()
 

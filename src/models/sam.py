@@ -11,10 +11,10 @@ class SAM(nn.Module):
 
     Inputs:
       Xv: (batch, 196, 768)
-      Xk: (batch, 1, 256)
+      Xk: (batch, knowledge_tokens, 256)
     Outputs:
       Zv: (batch, 196, 512)
-      Zk: (batch, 1, 512)
+      Zk: (batch, knowledge_tokens, 512)
     """
 
     def __init__(
@@ -70,6 +70,7 @@ class SAM(nn.Module):
         Zv: torch.Tensor,
         Zk: torch.Tensor,
         labels: torch.Tensor | None,
+        sample_weights: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Compute a batch-level SAM alignment loss.
@@ -77,11 +78,15 @@ class SAM(nn.Module):
         The loss follows the paper's center-based idea in a mini-demo form:
         same-class visual and knowledge centers are pulled together, while
         different-class visual/knowledge centers are separated by a margin.
+        Optional sample weights let reliable visual samples contribute more to
+        each class center.
         """
         if labels is None:
             return Zv.new_zeros(())
 
         labels = labels.to(device=Zv.device, dtype=torch.long)
+        if sample_weights is not None:
+            sample_weights = sample_weights.to(device=Zv.device, dtype=Zv.dtype)
         visual_samples = Zv.mean(dim=1)
         knowledge_samples = Zk.mean(dim=1)
         class_ids = labels.unique(sorted=True)
@@ -92,8 +97,23 @@ class SAM(nn.Module):
         knowledge_centers: list[torch.Tensor] = []
         for class_id in class_ids:
             mask = labels == class_id
-            visual_centers.append(visual_samples[mask].mean(dim=0))
-            knowledge_centers.append(knowledge_samples[mask].mean(dim=0))
+            class_visual = visual_samples[mask]
+            class_knowledge = knowledge_samples[mask]
+            if sample_weights is None:
+                visual_centers.append(class_visual.mean(dim=0))
+                knowledge_centers.append(class_knowledge.mean(dim=0))
+                continue
+
+            class_weights = sample_weights[mask].clamp_min(0.0)
+            weight_sum = class_weights.sum()
+            if weight_sum <= 1e-6:
+                visual_centers.append(class_visual.mean(dim=0))
+                knowledge_centers.append(class_knowledge.mean(dim=0))
+                continue
+
+            normalized_weights = class_weights / weight_sum
+            visual_centers.append(torch.sum(class_visual * normalized_weights[:, None], dim=0))
+            knowledge_centers.append(torch.sum(class_knowledge * normalized_weights[:, None], dim=0))
 
         visual_center_tensor = F.normalize(torch.stack(visual_centers), dim=-1)
         knowledge_center_tensor = F.normalize(torch.stack(knowledge_centers), dim=-1)
@@ -116,6 +136,7 @@ class SAM(nn.Module):
         Xv: torch.Tensor,
         Xk: torch.Tensor,
         labels: torch.Tensor | None = None,
+        alignment_weights: torch.Tensor | None = None,
         return_loss: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         Zv = self.vision_proj(Xv)
@@ -134,6 +155,11 @@ class SAM(nn.Module):
         Zv = self.norm_v3(Zv + self.ffn_v(Zv))
         Zk = self.norm_k3(Zk + self.ffn_k(Zk))
         if return_loss:
-            alignment_loss = self.compute_alignment_loss(Zv, Zk, labels)
+            alignment_loss = self.compute_alignment_loss(
+                Zv,
+                Zk,
+                labels,
+                sample_weights=alignment_weights,
+            )
             return Zv, Zk, alignment_loss
         return Zv, Zk
